@@ -1,0 +1,35 @@
+name: First node project build and run
+on: push
+jobs:
+  build-node:
+    name: Build and run node project
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Cache node modules
+        uses: actions/cache@v2
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Checking node version
+        run: node --version
+
+      - name: Checking npm version
+        run: npm --version
+      
+      - name: Run node application
+        run: node app.js
+      - name: artifact upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: my-artifact
+          path: path/to/artifact/world.txt
+
