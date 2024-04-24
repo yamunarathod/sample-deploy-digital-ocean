@@ -1,35 +1,28 @@
-name: First node project build and run
-on: push
+name: Deploy Node.js Application to DigitalOcean
+
+on:
+  push:
+    branches:
+      - main  # Set this to the branch you want to deploy from
+
 jobs:
-  build-node:
-    name: Build and run node project
-    runs-on: windows-latest
+  deploy:
+    runs-on: ubuntu-latest
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
-      
-      - name: Cache node modules
-        uses: actions/cache@v2
+
+      - name: Set up SSH connection
+        uses: webfactory/ssh-agent@v0.5.4
         with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Copy project to DigitalOcean server
+        run: |
+          rsync -avz --delete ./ ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }}:/sample
 
       - name: Install dependencies
-        run: npm install
+        run: ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "cd sample && npm install"
 
-      - name: Checking node version
-        run: node --version
-
-      - name: Checking npm version
-        run: npm --version
-      
-      - name: Run node application
-        run: node app.js
-      - name: artifact upload
-        uses: actions/upload-artifact@v4
-        with:
-          name: my-artifact
-          path: path/to/artifact/world.txt
-
+      - name: Restart application
+        run: ssh ${{ secrets.SSH_USERNAME }}@${{ secrets.SSH_HOST }} "pm2 restart all"  # Assuming PM2 is used to manage your Node app
