@@ -8,17 +8,9 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [20.x]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: ${{ matrix.node-version }}
 
       - name: Set up SSH connection
         env:
@@ -26,7 +18,7 @@ jobs:
           SSH_AGENT_DEBUG: 1
         run: |
           eval `ssh-agent -a $SSH_AUTH_SOCK`
-          ssh-add - <<< "${{ secrets.SSH_PRIVATE_KEY }}"
+          echo "$SSH_PRIVATE_KEY" | ssh-add -
 
       - name: Copy project to DigitalOcean server
         run: |
